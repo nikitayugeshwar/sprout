@@ -1,0 +1,43 @@
+# Full local stack: MongoDB + the Sprout API.
+#
+#   docker compose up --build
+#   docker compose exec api npm run seed --workspace=api
+#
+# The web app is not containerised — run it with `npm run dev:web`, or deploy it
+# to Vercel/Netlify and point NEXT_PUBLIC_API_URL at this API.
+
+services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', 'db.adminCommand("ping").ok']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      MONGODB_URI: mongodb://mongo:27017/sprout
+      # Override these before exposing the stack to anything but localhost.
+      JWT_SECRET: ${JWT_SECRET:-local-compose-secret-not-for-production-use}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo-data:

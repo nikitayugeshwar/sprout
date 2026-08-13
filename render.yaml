@@ -1,0 +1,28 @@
+# One-click API deploy: https://render.com/deploy
+#
+# Render reads this blueprint and provisions the API. You still need a MongoDB
+# connection string — the free tier of MongoDB Atlas is plenty — which is why
+# MONGODB_URI is marked sync:false and prompted for at deploy time.
+
+services:
+  - type: web
+    name: sprout-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: .
+    buildCommand: npm ci --workspaces --include-workspace-root
+    startCommand: node api/src/index.js
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        sync: false
+      # Set this to your deployed web origin, e.g. https://sprout.vercel.app
+      - key: CORS_ORIGIN
+        sync: false

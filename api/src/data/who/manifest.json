@@ -1,0 +1,70 @@
+{
+  "standard": "WHO Child Growth Standards (2006)",
+  "builtBy": "scripts/build-who-tables.mjs",
+  "tables": [
+    {
+      "indicator": "wfa",
+      "sex": "male",
+      "ageUnit": "day",
+      "rows": 1857,
+      "fixtures": 62,
+      "source": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/weight-for-age/expanded-tables/wfa-boys-zscore-expanded-tables.xlsx"
+    },
+    {
+      "indicator": "wfa",
+      "sex": "female",
+      "ageUnit": "day",
+      "rows": 1857,
+      "fixtures": 62,
+      "source": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/weight-for-age/expanded-tables/wfa-girls-zscore-expanded-tables.xlsx"
+    },
+    {
+      "indicator": "lhfa",
+      "sex": "male",
+      "ageUnit": "day",
+      "rows": 1857,
+      "fixtures": 62,
+      "source": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/length-height-for-age/expandable-tables/lhfa-boys-zscore-expanded-tables.xlsx"
+    },
+    {
+      "indicator": "lhfa",
+      "sex": "female",
+      "ageUnit": "day",
+      "rows": 1857,
+      "fixtures": 62,
+      "source": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/length-height-for-age/expandable-tables/lhfa-girls-zscore-expanded-tables.xlsx"
+    },
+    {
+      "indicator": "bfa",
+      "sex": "male",
+      "ageUnit": "day",
+      "rows": 1857,
+      "fixtures": 62,
+      "source": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/body-mass-index-for-age/expanded-tables/bfa-boys-zscore-expanded-tables.xlsx"
+    },
+    {
+      "indicator": "bfa",
+      "sex": "female",
+      "ageUnit": "day",
+      "rows": 1857,
+      "fixtures": 62,
+      "source": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/body-mass-index-for-age/expanded-tables/bfa-girls-zscore-expanded-tables.xlsx"
+    },
+    {
+      "indicator": "hcfa",
+      "sex": "male",
+      "ageUnit": "day",
+      "rows": 1857,
+      "fixtures": 62,
+      "source": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/head-circumference-for-age/expanded-tables/hcfa-boys-zscore-expanded-tables.xlsx"
+    },
+    {
+      "indicator": "hcfa",
+      "sex": "female",
+      "ageUnit": "day",
+      "rows": 1857,
+      "fixtures": 62,
+      "source": "https://cdn.who.int/media/docs/default-source/child-growth/child-growth-standards/indicators/head-circumference-for-age/expanded-tables/hcfa-girls-zscore-expanded-tables.xlsx"
+    }
+  ]
+}

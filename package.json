@@ -1,0 +1,27 @@
+{
+  "name": "sprout",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sprout — child growth, milestone and immunisation intelligence for parents",
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "dev": "concurrently -n api,web -c magenta,cyan \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm run dev --workspace=api",
+    "dev:web": "npm run dev --workspace=web",
+    "build": "npm run build --workspace=web",
+    "start:api": "npm start --workspace=api",
+    "start:web": "npm start --workspace=web",
+    "seed": "npm run seed --workspace=api",
+    "test": "npm test --workspace=api",
+    "who:build": "npm run who:build --workspace=api"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.4"
+  }
+}

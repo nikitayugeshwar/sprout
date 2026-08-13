@@ -1,0 +1,145 @@
+@import 'tailwindcss';
+
+/*
+ * Sprout's palette. Warm and calm rather than clinical — a parent checking
+ * whether their eight-month-old is feeding well should not feel like they have
+ * opened a hospital chart. The status colours are the exception: those are the
+ * only saturated things on the page, so attention lands where it should.
+ */
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  --color-canvas: #fbf9f5;
+  --color-surface: #ffffff;
+  --color-surface-sunk: #f5f2eb;
+  --color-line: #e7e1d6;
+
+  --color-ink: #1d2420;
+  --color-ink-soft: #5a635c;
+  --color-ink-faint: #8b9289;
+
+  --color-leaf-50: #f0f7f1;
+  --color-leaf-100: #dcecdd;
+  --color-leaf-200: #bcd9be;
+  --color-leaf-300: #91c096;
+  --color-leaf-400: #62a26b;
+  --color-leaf-500: #3f8549;
+  --color-leaf-600: #2f6a38;
+  --color-leaf-700: #27552e;
+
+  --color-berry-100: #fbe4e6;
+  --color-berry-400: #d9556a;
+  --color-berry-500: #c03a52;
+
+  --color-amber-soft: #fdf0d9;
+  --color-amber-strong: #b57612;
+
+  --color-sky-soft: #e4eef8;
+  --color-sky-strong: #2f6ba8;
+
+  --radius-card: 1rem;
+}
+
+/*
+ * Dark mode follows the operating system. Every colour above is a token, so
+ * re-pointing the tokens here re-themes every utility that references them —
+ * no `dark:` variant has to be sprinkled through the components.
+ */
+:root {
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-canvas: #12160f;
+    --color-surface: #1a1f18;
+    --color-surface-sunk: #222820;
+    --color-line: #2f382c;
+
+    --color-ink: #eaefe6;
+    --color-ink-soft: #a8b3a4;
+    --color-ink-faint: #788574;
+
+    --color-leaf-50: #182117;
+    --color-leaf-100: #1f2c1f;
+    --color-leaf-200: #2c4230;
+    --color-leaf-300: #4a7a51;
+    --color-leaf-400: #6cae74;
+    --color-leaf-500: #8bc793;
+    --color-leaf-600: #a8d7ad;
+    --color-leaf-700: #c2e3c6;
+
+    --color-berry-100: #34191d;
+    --color-berry-400: #e8798c;
+    --color-berry-500: #f08ea0;
+
+    --color-amber-soft: #33280f;
+    --color-amber-strong: #e6b155;
+
+    --color-sky-soft: #16232f;
+    --color-sky-strong: #7db2e3;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-leaf-200);
+    color: var(--color-ink);
+  }
+
+  /* Keyboard focus stays obvious; pointer focus does not add noise. */
+  :focus-visible {
+    outline: 2px solid var(--color-leaf-400);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@utility card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
+
+/* Numeric columns only line up if the digits are the same width. */
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes sprout-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility rise {
+  animation: sprout-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

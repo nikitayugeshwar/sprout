@@ -1,0 +1,22 @@
+# Netlify config for the Next.js web app.
+#
+# Set the base directory to `web` in the Netlify UI (or deploy from this file
+# with `netlify deploy --dir web`). NEXT_PUBLIC_API_URL must be set as an
+# environment variable in the site settings — it is baked in at build time, so
+# changing it later needs a rebuild, not just a restart.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
