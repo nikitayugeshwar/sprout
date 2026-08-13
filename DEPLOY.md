@@ -4,14 +4,33 @@ Sprout is two deployables plus a database:
 
 ```
   Next.js web  ──HTTPS──▶  Express API  ──▶  MongoDB
-  Vercel/Netlify           Render/Railway     Atlas free tier
+                                             Atlas free tier
 ```
 
-They are separate because they scale and fail differently — but if you would rather run one
-box, `docker compose up` gives you the API and MongoDB together, and the web app can be served
-from anywhere.
+Total cost on free tiers: nothing. **A working MongoDB is required first** — there is no way
+around it, and the in-memory fallback is development-only.
 
-Total cost on free tiers: nothing.
+## Where the API can run
+
+The web app is a normal Next.js site and goes on Vercel or Netlify without ceremony. The API is
+the part with a real choice, because Express is a long-running server and Vercel is not:
+
+| | How it runs | Trade-off |
+|---|---|---|
+| **Vercel** (`api/vercel.json`) | `api/api/index.js` wraps the app as a serverless function | Same platform as the web app, no sleeping. Cold starts, and the Mongo connection must be cached — it is |
+| **Render** (`render.yaml`) | `node api/src/index.js`, an ordinary server | Simplest mental model, nothing to reason about. Free instances sleep after ~15 min idle |
+
+Both are committed and both work. Pick one, and skip the other section below.
+
+Before deploying either, verify the serverless wiring still holds:
+
+```bash
+npm run check:vercel --workspace=api
+```
+
+That mounts the real handler behind a plain HTTP server — the same `handler(req, res)` contract
+Vercel uses — and drives routing, the connection cache, auth and a full write path against a
+throwaway MongoDB.
 
 ---
 
@@ -40,7 +59,44 @@ Total cost on free tiers: nothing.
 
 ---
 
-## 2. API — Render
+## 2a. API — Vercel (same platform as the web app)
+
+Create a **second Vercel project** from the same repository — one project cannot serve two root
+directories.
+
+| Setting | Value |
+|---|---|
+| Root Directory | `api` |
+| Framework Preset | Other |
+
+`api/vercel.json` routes every path to the function. It uses `routes` rather than `rewrites`
+deliberately: `routes` preserves the original `req.url`, which Express needs to match a route,
+whereas `rewrites` would replace the path and 404 everything.
+
+Environment variables:
+
+| Variable | Value |
+|---|---|
+| `MONGODB_URI` | the Atlas string from step 1 |
+| `JWT_SECRET` | `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
+| `CORS_ORIGIN` | your web origin, e.g. `https://sprout.vercel.app` |
+| `NODE_ENV` | `production` |
+
+Serverless notes that are already handled, but worth knowing:
+
+- The Mongo connection is cached on `globalThis`, so a warm container reuses it. Without that,
+  every invocation would open a new connection and a traffic spike would exhaust the Atlas
+  connection limit.
+- `USE_IN_MEMORY_DB` cannot work here — the fallback spawns a `mongod` binary, which a read-only
+  serverless filesystem will not allow. The handler fails with that message rather than hanging.
+
+Then verify:
+
+```bash
+node api/scripts/smoke.mjs https://sprout-api.vercel.app/api/v1
+```
+
+## 2b. API — Render (an ordinary long-running server)
 
 The repo ships a `render.yaml` blueprint, so **New → Blueprint** and pointing Render at the repo
 does everything except the two secrets it cannot guess.
