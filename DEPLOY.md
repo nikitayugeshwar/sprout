@@ -26,6 +26,18 @@ Total cost on free tiers: nothing.
    mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/sprout?retryWrites=true&w=majority
    ```
 
+   Don't omit the `/sprout` path segment — without a database name the driver silently uses
+   `test`.
+
+5. Verify it before you deploy anything:
+
+   ```bash
+   node api/scripts/check-db.mjs "mongodb+srv://..."
+   ```
+
+   That checks DNS, connection, authentication and a write in turn, and tells you which step
+   failed rather than making you decode a driver error.
+
 ---
 
 ## 2. API — Render
@@ -142,3 +154,5 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 | API exits immediately on boot | Missing `MONGODB_URI` or default `JWT_SECRET` in production — check the logs, it says which |
 | Charts empty, everything else fine | `npm run who:build` was never run and `api/src/data/who/*.json` is missing |
 | Atlas connection times out | Network Access allowlist does not include `0.0.0.0/0` |
+| `querySrv ENOTFOUND` on boot | The cluster hostname does not exist — deleted, still provisioning, or mistyped. Run `node api/scripts/check-db.mjs` for a step-by-step diagnosis |
+| Data lands in a `test` database | The connection string has no `/sprout` path segment |

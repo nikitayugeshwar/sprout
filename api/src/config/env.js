@@ -12,6 +12,20 @@ const schema = z.object({
   /** Omit in development and an in-memory MongoDB is started automatically. */
   MONGODB_URI: z.string().optional(),
 
+  /**
+   * Forces the in-memory database even when MONGODB_URI is set — useful for
+   * carrying on locally while a remote cluster is down.
+   *
+   * This exists as its own flag rather than "just blank out MONGODB_URI"
+   * because Windows deletes an environment variable assigned an empty string,
+   * so dotenv immediately refills it from .env and the override silently does
+   * nothing.
+   */
+  USE_IN_MEMORY_DB: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true' || v === '1'),
+
   JWT_SECRET: z.string().min(16).default('sprout-dev-secret-change-me-in-production'),
   JWT_EXPIRES_IN: z.string().default('7d'),
 
@@ -44,6 +58,10 @@ export const config = {
 };
 
 if (config.isProd) {
+  if (config.USE_IN_MEMORY_DB) {
+    console.error('USE_IN_MEMORY_DB is a development-only escape hatch — refusing to start in production.');
+    process.exit(1);
+  }
   if (!config.MONGODB_URI) {
     console.error('MONGODB_URI is required in production — refusing to start on an ephemeral in-memory database.');
     process.exit(1);
