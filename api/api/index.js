@@ -20,7 +20,7 @@
  */
 import mongoose from 'mongoose';
 import { createApp } from '../src/app.js';
-import { config } from '../src/config/env.js';
+import { config, configErrors } from '../src/config/env.js';
 import { explainConnectionFailure } from '../src/config/db.js';
 
 /**
@@ -60,21 +60,29 @@ async function connect() {
   return cache.connecting;
 }
 
+function fail(res, status, code, message, extra = {}) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ error: { code, message, ...extra } }));
+}
+
 export default async function handler(req, res) {
+  // Missing environment variables are the single most common deployment
+  // mistake, so they get a response that names them. Reporting this here
+  // rather than exiting at import time is the difference between "500,
+  // FUNCTION_INVOCATION_FAILED" and a message telling you what to set.
+  if (configErrors.length) {
+    return fail(res, 503, 'configuration_error', 'The API is not configured correctly.', {
+      missing: configErrors,
+      hint: 'Set these in your hosting provider’s environment variables, then redeploy.',
+    });
+  }
+
   try {
     await connect();
     cache.app ??= createApp();
     return cache.app(req, res);
   } catch (err) {
-    res.statusCode = 503;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(
-      JSON.stringify({
-        error: {
-          code: 'database_unavailable',
-          message: config.isProd ? 'The database is unavailable' : err.message,
-        },
-      }),
-    );
+    return fail(res, 503, 'database_unavailable', err.message);
   }
 }

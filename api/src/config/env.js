@@ -42,32 +42,56 @@ const schema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 });
 
+/**
+ * True inside a serverless container (Vercel, Lambda).
+ *
+ * This matters because the two runtimes fail differently. A standalone server
+ * should die loudly on bad configuration — the operator reads the message and
+ * fixes it. A serverless function must NOT: `process.exit()` during module
+ * evaluation is reported as a bare FUNCTION_INVOCATION_FAILED / 500, with the
+ * reason buried in the platform logs and nothing useful sent to the caller.
+ * So there we record the problem and let the request handler report it.
+ */
+const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
 const parsed = schema.safeParse(process.env);
-if (!parsed.success) {
-  console.error('Invalid environment configuration:');
-  for (const issue of parsed.error.issues) console.error(`  ${issue.path.join('.')}: ${issue.message}`);
-  process.exit(1);
-}
+
+/** Configuration problems fatal enough that the app cannot serve traffic. */
+const fatal = parsed.success ? [] : parsed.error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`);
+
+// Fall back to the schema's defaults when parsing failed, so the module can
+// finish loading and the handler can report `configErrors` properly.
+const data = parsed.success ? parsed.data : schema.parse({});
 
 export const config = {
-  ...parsed.data,
-  isProd: parsed.data.NODE_ENV === 'production',
-  isTest: parsed.data.NODE_ENV === 'test',
-  corsOrigins: parsed.data.CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean),
-  aiEnabled: Boolean(parsed.data.ANTHROPIC_API_KEY),
+  ...data,
+  isProd: data.NODE_ENV === 'production',
+  isTest: data.NODE_ENV === 'test',
+  isServerless: IS_SERVERLESS,
+  corsOrigins: data.CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean),
+  aiEnabled: Boolean(data.ANTHROPIC_API_KEY),
 };
 
 if (config.isProd) {
   if (config.USE_IN_MEMORY_DB) {
-    console.error('USE_IN_MEMORY_DB is a development-only escape hatch — refusing to start in production.');
-    process.exit(1);
+    fatal.push('USE_IN_MEMORY_DB is a development-only escape hatch and cannot be used in production.');
   }
   if (!config.MONGODB_URI) {
-    console.error('MONGODB_URI is required in production — refusing to start on an ephemeral in-memory database.');
-    process.exit(1);
+    fatal.push('MONGODB_URI is not set. Add your MongoDB connection string to the environment variables.');
   }
   if (config.JWT_SECRET.startsWith('sprout-dev-secret')) {
-    console.error('JWT_SECRET is still the development default — refusing to start.');
-    process.exit(1);
+    fatal.push(
+      'JWT_SECRET is still the development default. Generate one with:\n' +
+        '      node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'hex\'))"',
+    );
   }
+}
+
+/** Read by the serverless handler to turn misconfiguration into a readable 503. */
+export const configErrors = fatal;
+
+if (fatal.length) {
+  console.error('Invalid configuration:');
+  for (const f of fatal) console.error(`  • ${f}`);
+  if (!IS_SERVERLESS) process.exit(1);
 }
